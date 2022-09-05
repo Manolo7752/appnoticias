@@ -1,9 +1,9 @@
-//Manuel Rodriguez Carvacho 3600 PEV 03.08.2022
 import { Component, Input, OnInit } from '@angular/core';
 import { Article } from 'src/app/interfaces';
 import { InAppBrowser } from '@awesome-cordova-plugins/in-app-browser/ngx';
 import {Share} from '@capacitor/share';
 import { ActionSheetController } from '@ionic/angular';
+import { StorageService } from 'src/app/services/storage.service';
 
 
 @Component({
@@ -16,7 +16,11 @@ export class ArticleComponent implements OnInit {
   @Input() article:Article;
   @Input() index:number;
 
-  constructor(private iab:InAppBrowser, private actionSheetCtrl:ActionSheetController) { }
+  constructor(
+    private iab:InAppBrowser, 
+    private actionSheetCtrl:ActionSheetController,
+    private storageService:StorageService
+    ) { }
 
   ngOnInit() {}
 
@@ -28,6 +32,9 @@ export class ArticleComponent implements OnInit {
 
   async openMenu()
   {
+
+    const inFavorites = this.storageService.articlesInFavorites(this.article)
+
     const actionSheet = await this.actionSheetCtrl.create(
     {
       header:'Options',
@@ -38,8 +45,8 @@ export class ArticleComponent implements OnInit {
           handler: ()=> this.shareArticle()
         },
         {
-          text:'Favorites',
-          icon:'heart-outline',
+          text: inFavorites ? 'Remove Favorites' : 'Favorites',
+          icon: inFavorites ?  'heart' : 'heart-outline',
           handler: ()=> this.onToggleFavorite()
         },
         {
@@ -65,8 +72,10 @@ export class ArticleComponent implements OnInit {
     });
   }
 
-  onToggleFavorite(){
+  async onToggleFavorite(){
+
     console.log('share article');
+    await this.storageService.saveOrRemoveArticle(this.article);
   }
 
 }
